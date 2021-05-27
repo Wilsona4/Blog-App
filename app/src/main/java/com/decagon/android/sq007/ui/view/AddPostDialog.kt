@@ -1,27 +1,23 @@
 package com.decagon.android.sq007.ui.view
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
-import com.decagon.android.sq007.databinding.ActivityAddCommentDialogBinding
-import com.decagon.android.sq007.model.Comment
+import com.decagon.android.sq007.databinding.FragmentAddPostDialogBinding
 import com.decagon.android.sq007.model.Post
 import com.decagon.android.sq007.repository.Repository
 import com.decagon.android.sq007.room.CachedCommentMapper
 import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
-import com.decagon.android.sq007.util.LocalListUtil
-import com.decagon.android.sq007.util.Resource
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
 
-class AddCommentDialog(private val post: Post) : DialogFragment() {
-    private var _binding: ActivityAddCommentDialogBinding? = null
+class AddPostDialog : DialogFragment() {
+    private var _binding: FragmentAddPostDialogBinding? = null
     private val binding get() = _binding!!
     private lateinit var repository: Repository
     private lateinit var viewModel: MainViewModel
@@ -35,11 +31,11 @@ class AddCommentDialog(private val post: Post) : DialogFragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        _binding = ActivityAddCommentDialogBinding.inflate(inflater, container, false)
+        // Inflate the layout for this fragment
+        _binding = FragmentAddPostDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -52,27 +48,25 @@ class AddCommentDialog(private val post: Post) : DialogFragment() {
         postMapper = CachedPostMapper()
         repository = Repository(roomDatabase, commentMapper, postMapper)
         viewModelFactory = MainViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
+        viewModel =
+            ViewModelProvider(requireActivity(), viewModelFactory).get(MainViewModel::class.java)
 
-        binding.btComment.setOnClickListener {
-            val name = binding.commenterName.text.toString()
-            val email = binding.emailAddress.text.toString()
-            val comments = binding.newComment.text.toString()
+        binding.btPost.setOnClickListener {
+            val postTitle = binding.newPostTitle.text.toString()
+            val postBody = binding.newPostBody.text.toString()
+            val userId = (1..10).random()
             val id = 0
-            val postId = post.id
 
-
-            if (name.isEmpty() || email.isEmpty() || comments.isEmpty()){
-                binding.commenterName.error = "Name Can't Be Empty"
-                binding.emailAddress.error = "Email Can't Be Empty"
-                binding.newComment.error = "Comment Can't Be Empty"
-                Toast.makeText(requireContext(), "All Fields Must Be Filled", Toast.LENGTH_SHORT).show()
+            if (postTitle.isEmpty() || postBody.isEmpty()) {
+                binding.newPostTitle.error = "Title Can't Be Empty"
+                binding.newPostBody.error = "Post Can't Be Empty"
+                Toast.makeText(requireContext(), "All Fields Must Be Filled", Toast.LENGTH_SHORT)
+                    .show()
                 return@setOnClickListener
             } else {
-                val newComment = Comment(comments, email, id, name, postId)
-                viewModel.pushComment(newComment)
-                Log.d("NEWCOM", "onActivityCreated: $newComment")
-                viewModel.getComments(postId)
+                val newPost = Post(userId, id, postTitle, postBody)
+                viewModel.addPost(newPost)
+                viewModel.getPosts()
                 dismiss()
             }
         }

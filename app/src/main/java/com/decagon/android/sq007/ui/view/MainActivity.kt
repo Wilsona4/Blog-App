@@ -1,5 +1,6 @@
 package com.decagon.android.sq007.ui.view
 
+import android.app.ProgressDialog.show
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -11,7 +12,6 @@ import androidx.appcompat.widget.SearchView.*
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.room.RoomDatabase
 import com.decagon.android.sq007.databinding.ActivityMainBinding
 import com.decagon.android.sq007.model.Post
 import com.decagon.android.sq007.repository.Repository
@@ -57,6 +57,37 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
 
         /*Initialise RecyclerView*/
         setupRecyclerView()
+
+        displayItems()
+
+        /*Set-up Search functionality*/
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
+            OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                query?.let { viewModel.searchPostList(it) }
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                newText?.let { viewModel.searchPostList(it) }
+                return false
+            }
+        })
+
+        /*Add New Comment*/
+        binding.fabPost.setOnClickListener {
+            AddPostDialog().show(supportFragmentManager, "D")
+        }
+
+        /*Set-up Rv Swipe to Refresh*/
+        binding.swipeRefresh.setOnRefreshListener {
+            displayItems()
+            binding.swipeRefresh.isRefreshing = false
+        }
+
+    }
+
+    private fun displayItems() {
         /*Set-Up Internet Connection Awareness*/
         connectivityLiveData.observe(this, Observer { isAvailable ->
             when (isAvailable) {
@@ -73,23 +104,7 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
                 }
             }
         })
-
-        /*Set-up Search functionality*/
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
-            OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let { viewModel.searchPostList(it) }
-                return false
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                newText?.let { viewModel.searchPostList(it) }
-                return false
-            }
-        })
-
     }
-
 
     /*Initialise RecyclerView*/
     private fun setupRecyclerView() {
@@ -101,7 +116,6 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
     }
 
     private fun loadPage() {
-
         viewModel.postList.observe(this, Observer { response ->
             when (response) {
                 is Resource.Success -> {

@@ -20,7 +20,6 @@ interface RoomDao {
     @Query("SELECT * FROM comment_table")
     suspend fun readAllComments(): List<CommentEntity>
 
-
     /*Add Comment to Database*/
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addComment(comment: CommentEntity)

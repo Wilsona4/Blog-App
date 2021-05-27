@@ -9,7 +9,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.decagon.android.sq007.databinding.ActivityCommentBinding
-import com.decagon.android.sq007.model.Comment
 import com.decagon.android.sq007.model.Post
 import com.decagon.android.sq007.repository.Repository
 import com.decagon.android.sq007.room.CachedCommentMapper
@@ -22,7 +21,6 @@ import com.decagon.android.sq007.util.LocalListUtil
 import com.decagon.android.sq007.util.Resource
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
-import kotlin.properties.Delegates
 
 class CommentActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCommentBinding
@@ -37,6 +35,8 @@ class CommentActivity : AppCompatActivity() {
 
     private var localCommentList = LocalListUtil.getCommentList()
 
+    var postIds = 1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCommentBinding.inflate(layoutInflater)
@@ -46,6 +46,9 @@ class CommentActivity : AppCompatActivity() {
 
         val retrievedPost: Post? = intent?.extras?.getParcelable(POST)
         val postId = retrievedPost?.id
+        if (postId != null) {
+            postIds = postId
+        }
 
         /*Initialise ViewModel*/
         val roomDatabase = LocalDataBase.getInstance(this)
@@ -87,10 +90,18 @@ class CommentActivity : AppCompatActivity() {
         binding.floatingActionButton.setOnClickListener {
             if (retrievedPost != null) {
                 AddCommentDialog(retrievedPost).show(supportFragmentManager, "D")
-                loadPage()
+                commentRvAdapter.notifyDataSetChanged()
             }
         }
+
+        /*Set-up Rv Swipe to Refresh*/
+        binding.swipeRefreshComment.setOnRefreshListener {
+            postId?.let { viewModel.getComments(it) }
+            loadPage()
+            binding.swipeRefreshComment.isRefreshing = false
+        }
     }
+
 
     /*Initialise RecyclerView*/
     private fun setupRecyclerView() {
@@ -102,7 +113,7 @@ class CommentActivity : AppCompatActivity() {
     }
 
     private fun loadPage() {
-
+        viewModel.getComments(postIds)
         viewModel.commentList.observe(this, Observer { response ->
             when (response) {
                 is Resource.Success -> {

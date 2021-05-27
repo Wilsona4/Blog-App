@@ -68,7 +68,7 @@ class CommentRvAdapter() :
             commentName.text = item.name
             commentEmail.text = item.email
             commentBody.text = item.body
-            commentId.text = item.id.toString()
+//            commentId.text = item.id.toString()
         }
     }
 

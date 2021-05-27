@@ -5,6 +5,7 @@ import com.decagon.android.sq007.model.Comment
 import com.decagon.android.sq007.model.Post
 import com.decagon.android.sq007.repository.IRepository
 import com.decagon.android.sq007.util.Resource
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -17,12 +18,8 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
     private var _commentList = MutableLiveData<Resource<List<Comment>>>()
     val commentList: LiveData<Resource<List<Comment>>> get() = _commentList
 
-    private var _comment = MutableLiveData<Resource<Comment>>()
-    val comment: LiveData<Resource<Comment>> get() = _comment
-
     private var _entireCommentList = MutableLiveData<Resource<List<Comment>>>()
     val entireCommentList: LiveData<Resource<List<Comment>>> get() = _entireCommentList
-
 
     init {
         getPosts()
@@ -30,7 +27,7 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
     }
 
     /*Function to get post*/
-    private fun getPosts() {
+    fun getPosts() {
         viewModelScope.launch {
             _postList.value = Resource.Loading
             val response = repository.getPosts()
@@ -65,15 +62,17 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
     /*Function to add Comments*/
     fun pushComment(comment: Comment) {
         viewModelScope.launch {
-            _comment.postValue(Resource.Loading)
-            val response = repository.pushComment(comment)
-            response.collect {
-                _comment.value = it
-            }
+            Resource.Loading
+            repository.pushComment(comment)
         }
     }
 
-
+    /*Function to add Posts*/
+    fun addPost(post: Post) {
+        viewModelScope.launch {
+            repository.addPost(post)
+        }
+    }
 
     /*Search Posts*/
     private var cachedPostList = MutableLiveData<Resource<List<Post>>>()

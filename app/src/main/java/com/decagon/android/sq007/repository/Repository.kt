@@ -1,6 +1,6 @@
 package com.decagon.android.sq007.repository
 
-import androidx.lifecycle.viewModelScope
+import android.util.Log
 import com.decagon.android.sq007.model.Comment
 import com.decagon.android.sq007.model.Post
 import com.decagon.android.sq007.remote.RetrofitInstance
@@ -8,11 +8,8 @@ import com.decagon.android.sq007.room.CachedCommentMapper
 import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
 import com.decagon.android.sq007.util.Resource
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
-import retrofit2.Response
 
 class Repository(
     private val db: LocalDataBase,
@@ -33,7 +30,7 @@ class Repository(
             /*Retrieve Posts Local DataBAse*/
             val cachedPosts = db.userDao().readAllPost()
             emit(Resource.Success(cachedPostMapper.mapFromEntityList(cachedPosts)))
-        } catch (e:Exception){
+        } catch (e: Exception) {
             emit(Resource.Error(e))
         }
     }
@@ -45,7 +42,7 @@ class Repository(
             /*Retrieve Posts Local DataBAse*/
             val cachedComments = db.userDao().readComments(postId)
             emit(Resource.Success(cachedCommentMapper.mapFromEntityList(cachedComments)))
-        } catch (e:Exception){
+        } catch (e: Exception) {
 //            error exception
             emit(Resource.Error(e))
         }
@@ -64,25 +61,29 @@ class Repository(
             /*Retrieve Posts Local DataBAse*/
             val cachedComments = db.userDao().readAllComments()
             emit(Resource.Success(cachedCommentMapper.mapFromEntityList(cachedComments)))
-        } catch (e:Exception){
+        } catch (e: Exception) {
             emit(Resource.Error(e))
         }
     }
 
     /*Add Comment*/
-    override suspend fun pushComment(comment: Comment): Flow<Resource<Comment>> = flow {
-        emit(Resource.Loading)
+    override suspend fun pushComment(comment: Comment) {
         try {
-            /*Post comment to API*****/
-            RetrofitInstance.postApi.pushComment(comment)
             /*Add Comment to Local Database*/
             db.userDao().addComment(cachedCommentMapper.mapToEntity(comment))
-        } catch (e : Exception) {
-            emit(Resource.Error(e))
+        } catch (e: Exception) {
+            Log.d("COM", "pushComment: ${e.message}")
         }
     }
 
-
+    override suspend fun addPost(post: Post) {
+        try {
+            /*Add Comment to Local Database*/
+            db.userDao().addPost(cachedPostMapper.mapToEntity(post))
+        } catch (e: Exception) {
+            Log.d("Post", "Add Post: ${e.message}")
+        }
+    }
 
 
 }
