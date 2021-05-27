@@ -1,4 +1,6 @@
-package com.decagon.android.sq007.util
+package com.decagon.android.sq007.ui.State
+
+import com.decagon.android.sq007.model.Post
 
 // Generic Resource Class to handle network errors
 //sealed class Resource<T>(val data: T? = null, val message: String? = null) {
@@ -7,13 +9,14 @@ package com.decagon.android.sq007.util
 //    class Loading<T>(data: T? = null) : Resource<T>(data)
 //}
 
-sealed class Resource<out T>(val data: T? = null) {
+sealed class Resource<out T>() {
 
-    class Success<out T>(data: T): Resource<T>(data)
+    data class Success<out T>(val data: T): Resource<T>()
 
     data class Error(val exception: Exception): Resource<Nothing>()
 
     object Loading: Resource<Nothing>()
+    object Idle: Resource<Nothing>()
 
 
 }

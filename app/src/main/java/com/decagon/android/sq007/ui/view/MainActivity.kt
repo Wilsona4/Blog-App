@@ -1,16 +1,15 @@
 package com.decagon.android.sq007.ui.view
 
-import android.app.ProgressDialog.show
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
-import android.widget.SearchView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView.*
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.decagon.android.sq007.databinding.ActivityMainBinding
 import com.decagon.android.sq007.model.Post
@@ -18,12 +17,15 @@ import com.decagon.android.sq007.repository.Repository
 import com.decagon.android.sq007.room.CachedCommentMapper
 import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
+import com.decagon.android.sq007.ui.Intents.MainIntent
+import com.decagon.android.sq007.ui.State.MainState
 import com.decagon.android.sq007.ui.adapter.PostRvAdapter
 import com.decagon.android.sq007.util.ConnectivityLiveData
 import com.decagon.android.sq007.util.LocalListUtil.getPostList
-import com.decagon.android.sq007.util.Resource
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.util.*
 
 class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
@@ -57,22 +59,22 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
 
         /*Initialise RecyclerView*/
         setupRecyclerView()
-
+        launchView()
         displayItems()
 
-        /*Set-up Search functionality*/
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
-            OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let { viewModel.searchPostList(it) }
-                return false
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                newText?.let { viewModel.searchPostList(it) }
-                return false
-            }
-        })
+//        /*Set-up Search functionality*/
+//        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
+//            OnQueryTextListener {
+//            override fun onQueryTextSubmit(query: String?): Boolean {
+//                query?.let { viewModel.searchPostList(it) }
+//                return false
+//            }
+//
+//            override fun onQueryTextChange(newText: String?): Boolean {
+//                newText?.let { viewModel.searchPostList(it) }
+//                return false
+//            }
+//        })
 
         /*Add New Comment*/
         binding.fabPost.setOnClickListener {
@@ -92,13 +94,16 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
         connectivityLiveData.observe(this, Observer { isAvailable ->
             when (isAvailable) {
                 true -> {
-//                    viewModel.getPosts()
+                    hideProgressBar()
                     binding.rvPost.visibility = View.VISIBLE
+                    binding.fabPost.visibility = View.VISIBLE
                     binding.statusButton.visibility = View.INVISIBLE
+                    launchView()
                     loadPage()
                 }
                 false -> {
                     binding.rvPost.visibility = View.INVISIBLE
+                    binding.fabPost.visibility = View.INVISIBLE
                     binding.statusButton.visibility = View.VISIBLE
                     hideProgressBar()
                 }
@@ -115,26 +120,37 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
         }
     }
 
+    private fun launchView() {
+        lifecycleScope.launch {
+            viewModel.userIntent.send(MainIntent.GetPosts)
+        }
+    }
+
     private fun loadPage() {
-        viewModel.postList.observe(this, Observer { response ->
-            when (response) {
-                is Resource.Success -> {
-                    response.data?.let {
-                        postRvAdapter.submitList(it)
-                        localPostList = it as MutableList<Post>
+        lifecycleScope.launch {
+            viewModel.state.collect { response ->
+                when (response) {
+                    is MainState.Idle -> {
                     }
-                    hideProgressBar()
-                }
-                is Resource.Loading -> {
-                    showProgressBar()
-                }
-                is Resource.Error -> {
-                    hideProgressBar()
-                    Toast.makeText(this, "Error: Occurred", Toast.LENGTH_SHORT).show()
+                    is MainState.Posts -> {
+                        response.let {
+                            postRvAdapter.submitList(it.post)
+                            localPostList = it.post as MutableList<Post>
+                        }
+                        hideProgressBar()
+                    }
+                    is MainState.Loading -> {
+                        showProgressBar()
+                    }
+                    is MainState.Error -> {
+                        hideProgressBar()
+                        Toast.makeText(this@MainActivity, "Error: Occurred", Toast.LENGTH_SHORT)
+                            .show()
+                    }
                 }
             }
+        }
 
-        })
     }
 
     private fun hideProgressBar() {

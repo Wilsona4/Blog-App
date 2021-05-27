@@ -7,7 +7,8 @@ import com.decagon.android.sq007.remote.RetrofitInstance
 import com.decagon.android.sq007.room.CachedCommentMapper
 import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
-import com.decagon.android.sq007.util.Resource
+import com.decagon.android.sq007.ui.State.MainState
+import com.decagon.android.sq007.ui.State.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -18,8 +19,8 @@ class Repository(
 ) : IRepository {
 
     /*Get All Posts*/
-    override suspend fun getPosts(): Flow<Resource<List<Post>>> = flow {
-        emit(Resource.Loading)
+    override suspend fun getPosts(): Flow<MainState> = flow {
+        emit(MainState.Loading)
         try {
             /*Retrieve Remote Posts*/
             val remotePosts = RetrofitInstance.postApi.getPosts()
@@ -29,9 +30,9 @@ class Repository(
             }
             /*Retrieve Posts Local DataBAse*/
             val cachedPosts = db.userDao().readAllPost()
-            emit(Resource.Success(cachedPostMapper.mapFromEntityList(cachedPosts)))
+            emit(MainState.Posts(cachedPostMapper.mapFromEntityList(cachedPosts)))
         } catch (e: Exception) {
-            emit(Resource.Error(e))
+            emit(MainState.Error(e))
         }
     }
 
@@ -67,10 +68,15 @@ class Repository(
     }
 
     /*Add Comment*/
-    override suspend fun pushComment(comment: Comment) {
+    override suspend fun pushComment(comment: Comment): Flow<Resource<List<Comment>>> = flow {
+        emit(Resource.Loading)
         try {
             /*Add Comment to Local Database*/
             db.userDao().addComment(cachedCommentMapper.mapToEntity(comment))
+
+            /*Retrieve Posts Local DataBase*/
+            val cachedComments = db.userDao().readComments(comment.postId)
+            emit(Resource.Success(cachedCommentMapper.mapFromEntityList(cachedComments)))
         } catch (e: Exception) {
             Log.d("COM", "pushComment: ${e.message}")
         }

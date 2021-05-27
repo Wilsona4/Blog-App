@@ -1,5 +1,6 @@
 package com.decagon.android.sq007.util
 
+import com.decagon.android.sq007.ui.State.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

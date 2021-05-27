@@ -15,8 +15,6 @@ import com.decagon.android.sq007.repository.Repository
 import com.decagon.android.sq007.room.CachedCommentMapper
 import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
-import com.decagon.android.sq007.util.LocalListUtil
-import com.decagon.android.sq007.util.Resource
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
 
@@ -72,7 +70,6 @@ class AddCommentDialog(private val post: Post) : DialogFragment() {
                 val newComment = Comment(comments, email, id, name, postId)
                 viewModel.pushComment(newComment)
                 Log.d("NEWCOM", "onActivityCreated: $newComment")
-                viewModel.getComments(postId)
                 dismiss()
             }
         }

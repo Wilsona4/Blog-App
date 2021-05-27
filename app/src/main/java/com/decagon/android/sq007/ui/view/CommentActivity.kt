@@ -18,7 +18,7 @@ import com.decagon.android.sq007.ui.adapter.CommentRvAdapter
 import com.decagon.android.sq007.ui.view.MainActivity.Companion.POST
 import com.decagon.android.sq007.util.ConnectivityLiveData
 import com.decagon.android.sq007.util.LocalListUtil
-import com.decagon.android.sq007.util.Resource
+import com.decagon.android.sq007.ui.State.Resource
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
 
@@ -90,7 +90,6 @@ class CommentActivity : AppCompatActivity() {
         binding.floatingActionButton.setOnClickListener {
             if (retrievedPost != null) {
                 AddCommentDialog(retrievedPost).show(supportFragmentManager, "D")
-                commentRvAdapter.notifyDataSetChanged()
             }
         }
 
