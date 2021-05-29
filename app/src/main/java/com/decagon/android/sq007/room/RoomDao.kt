@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RoomDao {
@@ -29,4 +30,8 @@ interface RoomDao {
     /*Read a Post Comments*/
     @Query("SELECT * FROM comment_table WHERE postId = :postId ORDER BY postId DESC")
     suspend fun readComments(postId: Int): List<CommentEntity>
+
+
+    @Query("SELECT * FROM post_table WHERE title LIKE :searchQuery OR id LIKE :searchQuery")
+    fun searchDatabase(searchQuery: String): Flow<List<PostEntity>>
 }

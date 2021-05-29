@@ -4,7 +4,6 @@ import com.decagon.android.sq007.model.Comment
 import com.decagon.android.sq007.model.Post
 
 sealed class MainState {
-    data class Success<out T>(val data: T): MainState()
 
     data class Error(val exception: Exception): MainState()
 
@@ -14,6 +13,6 @@ sealed class MainState {
     data class EntirePost(val post: List<Post>) : MainState()
     data class Comments(val comment: List<Comment>): MainState()
     data class EntireComment(val entireComment: List<Comment>): MainState()
-    data class AddComment(val comment: Comment): MainState()
-    data class AddPost(val post: Post): MainState()
+    data class Search(val post: List<Post>): MainState()
+
 }

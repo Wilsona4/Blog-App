@@ -5,7 +5,6 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,7 +18,6 @@ import com.decagon.android.sq007.ui.Intents.MainIntent
 import com.decagon.android.sq007.ui.State.MainState
 import com.decagon.android.sq007.ui.adapter.CommentRvAdapter
 import com.decagon.android.sq007.ui.view.MainActivity.Companion.POST
-import com.decagon.android.sq007.util.ConnectivityLiveData
 import com.decagon.android.sq007.util.LocalListUtil
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
@@ -35,7 +33,6 @@ class CommentActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var viewModelFactory: MainViewModelFactory
     private lateinit var commentRvAdapter: CommentRvAdapter
-    private lateinit var connectivityLiveData: ConnectivityLiveData
 
     private var localCommentList = LocalListUtil.getCommentList()
 
@@ -45,8 +42,6 @@ class CommentActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCommentBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        connectivityLiveData = ConnectivityLiveData(application)
 
         val retrievedPost: Post? = intent?.extras?.getParcelable(POST)
         val postId = retrievedPost?.id
@@ -69,28 +64,10 @@ class CommentActivity : AppCompatActivity() {
             binding.commentPostId.text = postId.toString()
         }
 
-        setupRecyclerView()
 
-        /*Set-Up Internet Connection Awareness*/
-        connectivityLiveData.observe(this, Observer { isAvailable ->
-            when (isAvailable) {
-                true -> {
-                    if (postId != null) {
-                        lifecycleScope.launch {
-                            viewModel.userIntent.send(MainIntent.GetComments(postId))
-                        }
-                    }
-                    binding.rvComments.visibility = View.VISIBLE
-                    binding.commentStatusButton.visibility = View.INVISIBLE
-                    loadPage()
-                }
-                false -> {
-                    binding.rvComments.visibility = View.INVISIBLE
-                    binding.commentStatusButton.visibility = View.VISIBLE
-                    hideProgressBar()
-                }
-            }
-        })
+        setupRecyclerView()
+        loadPage()
+
 
         /*Add New Comment*/
         binding.floatingActionButton.setOnClickListener {

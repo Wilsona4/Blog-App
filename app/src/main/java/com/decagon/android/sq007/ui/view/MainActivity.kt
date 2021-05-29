@@ -6,8 +6,8 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SearchView.*
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,7 +20,6 @@ import com.decagon.android.sq007.room.LocalDataBase
 import com.decagon.android.sq007.ui.Intents.MainIntent
 import com.decagon.android.sq007.ui.State.MainState
 import com.decagon.android.sq007.ui.adapter.PostRvAdapter
-import com.decagon.android.sq007.util.ConnectivityLiveData
 import com.decagon.android.sq007.util.LocalListUtil.getPostList
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
@@ -37,7 +36,6 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
     private lateinit var viewModel: MainViewModel
     private lateinit var viewModelFactory: MainViewModelFactory
     private lateinit var postRvAdapter: PostRvAdapter
-    private lateinit var connectivityLiveData: ConnectivityLiveData
 
     private var localPostList = getPostList()
 
@@ -45,8 +43,6 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        connectivityLiveData = ConnectivityLiveData(application)
 
         /*Initialise ViewModel*/
         val roomDatabase = LocalDataBase.getInstance(this)
@@ -60,21 +56,29 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
         /*Initialise RecyclerView*/
         setupRecyclerView()
         launchView()
-        displayItems()
+        loadPage()
 
-//        /*Set-up Search functionality*/
-//        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
-//            OnQueryTextListener {
-//            override fun onQueryTextSubmit(query: String?): Boolean {
-//                query?.let { viewModel.searchPostList(it) }
-//                return false
-//            }
-//
-//            override fun onQueryTextChange(newText: String?): Boolean {
-//                newText?.let { viewModel.searchPostList(it) }
-//                return false
-//            }
-//        })
+        /*Set-up Search functionality*/
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                query?.let {
+                    lifecycleScope.launch {
+                        viewModel.userIntent.send(MainIntent.Search(it))
+                    }
+                }
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                newText?.let {
+//                    viewModel.searchPostList(it)
+//                    lifecycleScope.launch {
+//                        viewModel.userIntent.send(MainIntent.Search(it))
+//                    }
+                }
+                return false
+            }
+        })
 
         /*Add New Comment*/
         binding.fabPost.setOnClickListener {
@@ -83,32 +87,11 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
 
         /*Set-up Rv Swipe to Refresh*/
         binding.swipeRefresh.setOnRefreshListener {
-            displayItems()
+            launchView()
+            loadPage()
             binding.swipeRefresh.isRefreshing = false
         }
 
-    }
-
-    private fun displayItems() {
-        /*Set-Up Internet Connection Awareness*/
-        connectivityLiveData.observe(this, Observer { isAvailable ->
-            when (isAvailable) {
-                true -> {
-                    hideProgressBar()
-                    binding.rvPost.visibility = View.VISIBLE
-                    binding.fabPost.visibility = View.VISIBLE
-                    binding.statusButton.visibility = View.INVISIBLE
-                    launchView()
-                    loadPage()
-                }
-                false -> {
-                    binding.rvPost.visibility = View.INVISIBLE
-                    binding.fabPost.visibility = View.INVISIBLE
-                    binding.statusButton.visibility = View.VISIBLE
-                    hideProgressBar()
-                }
-            }
-        })
     }
 
     /*Initialise RecyclerView*/

@@ -8,8 +8,8 @@ import com.decagon.android.sq007.room.CachedCommentMapper
 import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
 import com.decagon.android.sq007.ui.State.MainState
-import com.decagon.android.sq007.ui.State.Resource
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 
 class Repository(
@@ -76,7 +76,9 @@ class Repository(
 
             /*Retrieve Posts Local DataBase*/
             val cachedComments = db.userDao().readComments(comment.postId)
+
             emit(MainState.Comments(cachedCommentMapper.mapFromEntityList(cachedComments)))
+
         } catch (e: Exception) {
             Log.d("COM", "pushComment: ${e.message}")
         }
@@ -90,6 +92,22 @@ class Repository(
             /*Retrieve Posts Local DataBase*/
             val cachedPosts = db.userDao().readAllPost()
             emit(MainState.EntirePost(cachedPostMapper.mapFromEntityList(cachedPosts)))
+        } catch (e: Exception) {
+            Log.d("Post", "Add Post: ${e.message}")
+        }
+    }
+
+
+    override suspend fun search(query: String): Flow<MainState> = flow {
+        emit(MainState.Loading)
+        try {
+
+            /*Retrieve Posts Local DataBase*/
+            val cachedPosts = db.userDao().searchDatabase(query)
+
+            cachedPosts.collect {
+                emit(MainState.Search(cachedPostMapper.mapFromEntityList(it)))
+            }
         } catch (e: Exception) {
             Log.d("Post", "Add Post: ${e.message}")
         }

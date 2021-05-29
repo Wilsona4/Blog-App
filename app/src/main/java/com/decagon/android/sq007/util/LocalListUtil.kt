@@ -20,6 +20,6 @@ object LocalListUtil {
     }
 
     fun getCommentListCount(): Int {
-        return  localCommentList.size
+        return localCommentList.size
     }
 }

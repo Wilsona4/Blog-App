@@ -17,4 +17,5 @@ interface IRepository {
     suspend fun pushComment(comment: Comment) : Flow<MainState>
 
     suspend fun addPost(post: Post): Flow<MainState>
+    suspend fun search(query: String): Flow<MainState>
 }

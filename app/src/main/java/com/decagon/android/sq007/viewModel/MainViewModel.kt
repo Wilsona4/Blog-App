@@ -1,17 +1,14 @@
 package com.decagon.android.sq007.viewModel
 
-import androidx.lifecycle.*
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.decagon.android.sq007.model.Comment
 import com.decagon.android.sq007.model.Post
 import com.decagon.android.sq007.repository.IRepository
 import com.decagon.android.sq007.ui.Intents.MainIntent
 import com.decagon.android.sq007.ui.State.MainState
-import com.decagon.android.sq007.ui.State.Resource
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class MainViewModel(private val repository: IRepository) : ViewModel() {
@@ -22,18 +19,32 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
         get() = _state
 
 
-    init { handleIntent() }
+    init {
+        handleIntent()
+    }
 
     private fun handleIntent() {
         viewModelScope.launch {
             userIntent.consumeAsFlow().collect {
-                when(it) {
-                    is MainIntent.GetPosts -> {getPosts()}
-                    is MainIntent.GetAllComments -> {getAllComments()}
-                    is MainIntent.GetComments -> {getComments(it.postId)}
-                    is MainIntent.AddPost -> {addPost(it.post)}
-                    is MainIntent.AddComment -> {addComment(it.comment)}
-                    is MainIntent.Search -> {}
+                when (it) {
+                    is MainIntent.GetPosts -> {
+                        getPosts()
+                    }
+                    is MainIntent.GetAllComments -> {
+                        getAllComments()
+                    }
+                    is MainIntent.GetComments -> {
+                        getComments(it.postId)
+                    }
+                    is MainIntent.AddPost -> {
+                        addPost(it.post)
+                    }
+                    is MainIntent.AddComment -> {
+                        addComment(it.comment)
+                    }
+                    is MainIntent.Search -> {
+//                        searchPost(it.query)
+                    }
                 }
             }
         }
@@ -94,11 +105,22 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
         }
     }
 
-//    /*Search Posts*/
-//    private var cachedPostList = MutableStateFlow<MainState>(MainState.Idle)
-//    private var isSearchStarting = true
-//    var isSearching = MutableStateFlow(false)
-//
+//    /*Search DB*/
+//    fun searchPost(query: String) {
+//        viewModelScope.launch {
+//            _state.value = MainState.Loading
+//            val response = repository.search(query)
+//            response.collect {
+//                _state.value = it
+//            }
+//        }
+//    }
+
+    /*Search Posts*/
+    private var cachedPostList = MutableStateFlow<MainState>(MainState.Idle)
+    private var isSearchStarting = true
+    var isSearching = MutableStateFlow(false)
+
 //    fun searchPostList(query: String) {
 //
 //        if (isSearchStarting) {
@@ -119,22 +141,24 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
 //                isSearchStarting = true
 //                return@launch
 //            } else {
-//                val results = listToSearch?.data?.filter {
+//                val results = listToSearch.filter {
 //                    it.title.contains(query.trim(), ignoreCase = true) ||
 //                            it.id.toString().contains(query.trim())
 //                }
 //                results?.let {
-//                    _postList.value = Resource.Success(results)
+//                    _state.value = MainState.EntirePost(results)
 //                }
 //            }
 //
 //            if (isSearchStarting) {
-//                cachedPostList.value = _postList.value
+//                cachedPostList.value = _state.value
 //                isSearchStarting = false
 //            }
 //
 //            isSearching.value = true
 //        }
 //    }
+
+
 
 }
