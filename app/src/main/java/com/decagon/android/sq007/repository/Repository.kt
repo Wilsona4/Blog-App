@@ -19,7 +19,7 @@ class Repository(
 ) : IRepository {
 
     /*Get All Posts*/
-    override suspend fun getPosts(): Flow<MainState> = flow {
+    override suspend fun getRemotePosts(): Flow<MainState> = flow {
         emit(MainState.Loading)
         try {
             /*Retrieve Remote Posts*/
@@ -30,7 +30,22 @@ class Repository(
             }
             /*Retrieve Posts Local DataBAse*/
             val cachedPosts = db.userDao().readAllPost()
-            emit(MainState.EntirePost(cachedPostMapper.mapFromEntityList(cachedPosts)))
+            cachedPosts.collect {
+                emit(MainState.RemotePost(cachedPostMapper.mapFromEntityList(it)))
+            }
+        } catch (e: Exception) {
+            emit(MainState.Error(e))
+        }
+    }
+
+    override suspend fun getCachedPosts(): Flow<MainState> = flow {
+        emit(MainState.Loading)
+        try {
+            /*Retrieve Posts Local DataBAse*/
+            val cachedPosts = db.userDao().readAllPost()
+            cachedPosts.collect {
+                emit(MainState.RemotePost(cachedPostMapper.mapFromEntityList(it)))
+            }
         } catch (e: Exception) {
             emit(MainState.Error(e))
         }
@@ -42,9 +57,10 @@ class Repository(
         try {
             /*Retrieve Posts Local DataBAse*/
             val cachedComments = db.userDao().readComments(postId)
-            emit(MainState.Comments(cachedCommentMapper.mapFromEntityList(cachedComments)))
+            cachedComments.collect {
+                emit(MainState.Comments(cachedCommentMapper.mapFromEntityList(it)))
+            }
         } catch (e: Exception) {
-//            error exception
             emit(MainState.Error(e))
         }
     }
@@ -61,7 +77,9 @@ class Repository(
             }
             /*Retrieve Posts Local DataBAse*/
             val cachedComments = db.userDao().readAllComments()
-            emit(MainState.EntireComment(cachedCommentMapper.mapFromEntityList(cachedComments)))
+            cachedComments.collect {
+                emit(MainState.EntireComment(cachedCommentMapper.mapFromEntityList(it)))
+            }
         } catch (e: Exception) {
             emit(MainState.Error(e))
         }
@@ -77,7 +95,9 @@ class Repository(
             /*Retrieve Posts Local DataBase*/
             val cachedComments = db.userDao().readComments(comment.postId)
 
-            emit(MainState.Comments(cachedCommentMapper.mapFromEntityList(cachedComments)))
+            cachedComments.collect {
+                emit(MainState.Comments(cachedCommentMapper.mapFromEntityList(it)))
+            }
 
         } catch (e: Exception) {
             Log.d("COM", "pushComment: ${e.message}")
@@ -91,7 +111,9 @@ class Repository(
             db.userDao().addPost(cachedPostMapper.mapToEntity(post))
             /*Retrieve Posts Local DataBase*/
             val cachedPosts = db.userDao().readAllPost()
-            emit(MainState.EntirePost(cachedPostMapper.mapFromEntityList(cachedPosts)))
+            cachedPosts.collect {
+                emit(MainState.RemotePost(cachedPostMapper.mapFromEntityList(it)))
+            }
         } catch (e: Exception) {
             Log.d("Post", "Add Post: ${e.message}")
         }

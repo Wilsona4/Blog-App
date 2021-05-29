@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface IRepository {
 
-    suspend fun getPosts(): Flow<MainState>
+    suspend fun getRemotePosts(): Flow<MainState>
+
+    suspend fun getCachedPosts(): Flow<MainState>
 
     suspend fun getComments(postId: Int): Flow<MainState>
 
@@ -17,5 +19,6 @@ interface IRepository {
     suspend fun pushComment(comment: Comment) : Flow<MainState>
 
     suspend fun addPost(post: Post): Flow<MainState>
+
     suspend fun search(query: String): Flow<MainState>
 }

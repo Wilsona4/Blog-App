@@ -1,12 +1,12 @@
 package com.decagon.android.sq007.ui.adapter
 
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
 import com.decagon.android.sq007.R
 import com.decagon.android.sq007.model.Post
 
@@ -66,8 +66,8 @@ class PostRvAdapter(private val interaction: Interaction? = null) :
                 interaction?.onItemSelected(adapterPosition, item)
             }
             val postTitle = itemView.findViewById<TextView>(R.id.tvTitle)
-            val postBody= itemView.findViewById<TextView>(R.id.tvBody)
-            val postId= itemView.findViewById<TextView>(R.id.tvId)
+            val postBody = itemView.findViewById<TextView>(R.id.tvBody)
+            val postId = itemView.findViewById<TextView>(R.id.tvId)
 
             postTitle.text = item.title
             postBody.text = item.body

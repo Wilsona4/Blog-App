@@ -8,7 +8,10 @@ import com.decagon.android.sq007.repository.IRepository
 import com.decagon.android.sq007.ui.Intents.MainIntent
 import com.decagon.android.sq007.ui.State.MainState
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel(private val repository: IRepository) : ViewModel() {
@@ -21,14 +24,18 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
 
     init {
         handleIntent()
+        getRemotePosts()
     }
 
     private fun handleIntent() {
         viewModelScope.launch {
             userIntent.consumeAsFlow().collect {
                 when (it) {
-                    is MainIntent.GetPosts -> {
-                        getPosts()
+                    is MainIntent.GetRemotePosts -> {
+                        getRemotePosts()
+                    }
+                    is MainIntent.GetCachedPosts -> {
+                        getCachedPosts()
                     }
                     is MainIntent.GetAllComments -> {
                         getAllComments()
@@ -43,23 +50,40 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
                         addComment(it.comment)
                     }
                     is MainIntent.Search -> {
-//                        searchPost(it.query)
+                        searchPost(it.query)
+                    }
+                    is MainIntent.RefreshPostIntent -> {
+                        getRemotePosts()
+                    }
+                    is MainIntent.RefreshCommentIntent -> {
+                        getComments(it.postId)
                     }
                 }
             }
         }
     }
 
-    /*Function to get post*/
-    fun getPosts() {
+    /*Function to get Remote post*/
+    fun getRemotePosts() {
         viewModelScope.launch {
             _state.value = MainState.Loading
-            val response = repository.getPosts()
+            val response = repository.getRemotePosts()
             response.collect {
                 _state.value = it
             }
         }
     }
+
+    /*Function to get Remote post*/
+    fun getCachedPosts() {
+        viewModelScope.launch {
+            val response = repository.getCachedPosts()
+            response.collect {
+                _state.value = it
+            }
+        }
+    }
+
 
     /*Function to get All Comments*/
     fun getAllComments() {
@@ -105,16 +129,16 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
         }
     }
 
-//    /*Search DB*/
-//    fun searchPost(query: String) {
-//        viewModelScope.launch {
+    /*Search DB*/
+    fun searchPost(query: String) {
+        viewModelScope.launch {
 //            _state.value = MainState.Loading
-//            val response = repository.search(query)
-//            response.collect {
-//                _state.value = it
-//            }
-//        }
-//    }
+            val response = repository.search(query)
+            response.collect {
+                _state.value = it
+            }
+        }
+    }
 
     /*Search Posts*/
     private var cachedPostList = MutableStateFlow<MainState>(MainState.Idle)
@@ -158,7 +182,6 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
 //            isSearching.value = true
 //        }
 //    }
-
 
 
 }

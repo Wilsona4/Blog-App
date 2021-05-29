@@ -86,13 +86,11 @@ class CommentActivity : AppCompatActivity() {
 
         /*Set-up Rv Swipe to Refresh*/
         binding.swipeRefreshComment.setOnRefreshListener {
-
             postId?.let {
                 lifecycleScope.launch {
-                    viewModel.userIntent.send(MainIntent.GetComments(it))
+                    viewModel.userIntent.send(MainIntent.RefreshCommentIntent(postId))
                 }
             }
-            loadPage()
             binding.swipeRefreshComment.isRefreshing = false
         }
     }

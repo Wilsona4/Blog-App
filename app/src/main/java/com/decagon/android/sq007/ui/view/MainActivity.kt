@@ -7,7 +7,6 @@ import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SearchView.*
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -67,22 +66,30 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
         loadPage()
 
         /*Set-up Search functionality*/
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        binding.searchView.setOnQueryTextListener(object : OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let {
+                if (query.isNullOrEmpty()) {
                     lifecycleScope.launch {
-                        viewModel.userIntent.send(MainIntent.Search(it))
+                        viewModel.userIntent.send(MainIntent.GetCachedPosts)
+                    }
+                } else {
+                    lifecycleScope.launch {
+                        viewModel.userIntent.send(MainIntent.Search(query))
                     }
                 }
                 return false
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                newText?.let {
-//                    viewModel.searchPostList(it)
-//                    lifecycleScope.launch {
-//                        viewModel.userIntent.send(MainIntent.Search(it))
-//                    }
+
+                if (newText.isNullOrEmpty()) {
+                    lifecycleScope.launch {
+                        viewModel.userIntent.send(MainIntent.GetCachedPosts)
+                    }
+                } else {
+                    lifecycleScope.launch {
+                        viewModel.userIntent.send(MainIntent.Search(newText))
+                    }
                 }
                 return false
             }
@@ -95,8 +102,9 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
 
         /*Set-up Rv Swipe to Refresh*/
         binding.swipeRefresh.setOnRefreshListener {
-            launchView()
-            loadPage()
+            lifecycleScope.launch {
+                viewModel.userIntent.send(MainIntent.RefreshPostIntent)
+            }
             binding.swipeRefresh.isRefreshing = false
         }
 
@@ -113,7 +121,7 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
 
     private fun launchView() {
         lifecycleScope.launch {
-            viewModel.userIntent.send(MainIntent.GetPosts)
+            viewModel.userIntent.send(MainIntent.GetCachedPosts)
         }
     }
 
@@ -123,7 +131,21 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
                 when (response) {
                     is MainState.Idle -> {
                     }
-                    is MainState.EntirePost -> {
+                    is MainState.RemotePost -> {
+                        response.let {
+                            postRvAdapter.submitList(it.post)
+                            localPostList = it.post as MutableList<Post>
+                        }
+                        hideProgressBar()
+                    }
+                    is MainState.CachedPost -> {
+                        response.let {
+                            postRvAdapter.submitList(it.post)
+                            localPostList = it.post as MutableList<Post>
+                        }
+                        hideProgressBar()
+                    }
+                    is MainState.Search -> {
                         response.let {
                             postRvAdapter.submitList(it.post)
                             localPostList = it.post as MutableList<Post>
@@ -141,7 +163,6 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
                 }
             }
         }
-
     }
 
     private fun hideProgressBar() {

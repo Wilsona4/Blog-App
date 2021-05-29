@@ -17,11 +17,11 @@ interface RoomDao {
 
     /*Read all Posts in the Database*/
     @Query("SELECT * FROM post_table")
-    suspend fun readAllPost(): List<PostEntity>
+    fun readAllPost(): Flow<List<PostEntity>>
 
     /*Read all Posts in the Database*/
     @Query("SELECT * FROM comment_table")
-    suspend fun readAllComments(): List<CommentEntity>
+    fun readAllComments(): Flow<List<CommentEntity>>
 
     /*Add Comment to Database*/
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -29,7 +29,7 @@ interface RoomDao {
 
     /*Read a Post Comments*/
     @Query("SELECT * FROM comment_table WHERE postId = :postId ORDER BY postId DESC")
-    suspend fun readComments(postId: Int): List<CommentEntity>
+    fun readComments(postId: Int): Flow<List<CommentEntity>>
 
 
     @Query("SELECT * FROM post_table WHERE title LIKE :searchQuery OR id LIKE :searchQuery")
