@@ -30,28 +30,28 @@ class Repository(
             }
             /*Retrieve Posts Local DataBAse*/
             val cachedPosts = db.userDao().readAllPost()
-            emit(MainState.Posts(cachedPostMapper.mapFromEntityList(cachedPosts)))
+            emit(MainState.EntirePost(cachedPostMapper.mapFromEntityList(cachedPosts)))
         } catch (e: Exception) {
             emit(MainState.Error(e))
         }
     }
 
     /*Get Specific Comments*/
-    override suspend fun getComments(postId: Int): Flow<Resource<List<Comment>>> = flow {
-        emit(Resource.Loading)
+    override suspend fun getComments(postId: Int): Flow<MainState> = flow {
+        emit(MainState.Loading)
         try {
             /*Retrieve Posts Local DataBAse*/
             val cachedComments = db.userDao().readComments(postId)
-            emit(Resource.Success(cachedCommentMapper.mapFromEntityList(cachedComments)))
+            emit(MainState.Comments(cachedCommentMapper.mapFromEntityList(cachedComments)))
         } catch (e: Exception) {
 //            error exception
-            emit(Resource.Error(e))
+            emit(MainState.Error(e))
         }
     }
 
     /*Get All Comments*/
-    override suspend fun getAllComments(): Flow<Resource<List<Comment>>> = flow {
-        emit(Resource.Loading)
+    override suspend fun getAllComments(): Flow<MainState> = flow {
+        emit(MainState.Loading)
         try {
             /*Retrieve Remote Comments*/
             val remoteComments = RetrofitInstance.postApi.getAllComments()
@@ -61,31 +61,35 @@ class Repository(
             }
             /*Retrieve Posts Local DataBAse*/
             val cachedComments = db.userDao().readAllComments()
-            emit(Resource.Success(cachedCommentMapper.mapFromEntityList(cachedComments)))
+            emit(MainState.EntireComment(cachedCommentMapper.mapFromEntityList(cachedComments)))
         } catch (e: Exception) {
-            emit(Resource.Error(e))
+            emit(MainState.Error(e))
         }
     }
 
     /*Add Comment*/
-    override suspend fun pushComment(comment: Comment): Flow<Resource<List<Comment>>> = flow {
-        emit(Resource.Loading)
+    override suspend fun pushComment(comment: Comment): Flow<MainState> = flow {
+        emit(MainState.Loading)
         try {
             /*Add Comment to Local Database*/
             db.userDao().addComment(cachedCommentMapper.mapToEntity(comment))
 
             /*Retrieve Posts Local DataBase*/
             val cachedComments = db.userDao().readComments(comment.postId)
-            emit(Resource.Success(cachedCommentMapper.mapFromEntityList(cachedComments)))
+            emit(MainState.Comments(cachedCommentMapper.mapFromEntityList(cachedComments)))
         } catch (e: Exception) {
             Log.d("COM", "pushComment: ${e.message}")
         }
     }
 
-    override suspend fun addPost(post: Post) {
+    override suspend fun addPost(post: Post): Flow<MainState> = flow {
+        emit(MainState.Loading)
         try {
             /*Add Comment to Local Database*/
             db.userDao().addPost(cachedPostMapper.mapToEntity(post))
+            /*Retrieve Posts Local DataBase*/
+            val cachedPosts = db.userDao().readAllPost()
+            emit(MainState.EntirePost(cachedPostMapper.mapFromEntityList(cachedPosts)))
         } catch (e: Exception) {
             Log.d("Post", "Add Post: ${e.message}")
         }

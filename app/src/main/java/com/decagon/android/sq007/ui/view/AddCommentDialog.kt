@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.decagon.android.sq007.databinding.ActivityAddCommentDialogBinding
 import com.decagon.android.sq007.model.Comment
 import com.decagon.android.sq007.model.Post
@@ -15,8 +16,10 @@ import com.decagon.android.sq007.repository.Repository
 import com.decagon.android.sq007.room.CachedCommentMapper
 import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
+import com.decagon.android.sq007.ui.Intents.MainIntent
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
+import kotlinx.coroutines.launch
 
 class AddCommentDialog(private val post: Post) : DialogFragment() {
     private var _binding: ActivityAddCommentDialogBinding? = null
@@ -60,17 +63,26 @@ class AddCommentDialog(private val post: Post) : DialogFragment() {
             val postId = post.id
 
 
-            if (name.isEmpty() || email.isEmpty() || comments.isEmpty()){
-                binding.commenterName.error = "Name Can't Be Empty"
-                binding.emailAddress.error = "Email Can't Be Empty"
-                binding.newComment.error = "Comment Can't Be Empty"
-                Toast.makeText(requireContext(), "All Fields Must Be Filled", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            } else {
-                val newComment = Comment(comments, email, id, name, postId)
-                viewModel.pushComment(newComment)
-                Log.d("NEWCOM", "onActivityCreated: $newComment")
-                dismiss()
+            when {
+                name.isEmpty() -> {
+                    binding.commenterName.error = "Name Can't Be Empty"
+                    return@setOnClickListener
+                }
+                email.isEmpty() -> {
+                    binding.emailAddress.error = "Email Can't Be Empty"
+                    return@setOnClickListener
+                }
+                comments.isEmpty() -> {
+                    binding.newComment.error = "Comment Can't Be Empty"
+                    return@setOnClickListener
+                }
+                else -> {
+                    val newComment = Comment(comments, email, id, name, postId)
+                    lifecycleScope.launch {
+                        viewModel.userIntent.send(MainIntent.AddComment(newComment))
+                    }
+                    dismiss()
+                }
             }
         }
     }

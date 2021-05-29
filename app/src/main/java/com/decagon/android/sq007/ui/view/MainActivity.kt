@@ -132,7 +132,7 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
                 when (response) {
                     is MainState.Idle -> {
                     }
-                    is MainState.Posts -> {
+                    is MainState.EntirePost -> {
                         response.let {
                             postRvAdapter.submitList(it.post)
                             localPostList = it.post as MutableList<Post>

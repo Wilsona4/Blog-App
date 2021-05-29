@@ -10,11 +10,11 @@ interface IRepository {
 
     suspend fun getPosts(): Flow<MainState>
 
-    suspend fun getComments(postId: Int): Flow<Resource<List<Comment>>>
+    suspend fun getComments(postId: Int): Flow<MainState>
 
-    suspend fun getAllComments(): Flow<Resource<List<Comment>>>
+    suspend fun getAllComments(): Flow<MainState>
 
-    suspend fun pushComment(comment: Comment) : Flow<Resource<List<Comment>>>
+    suspend fun pushComment(comment: Comment) : Flow<MainState>
 
-    suspend fun addPost(post: Post)
+    suspend fun addPost(post: Post): Flow<MainState>
 }

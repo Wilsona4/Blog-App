@@ -7,6 +7,9 @@ import androidx.room.Query
 
 @Dao
 interface RoomDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun addPost(post: List<PostEntity>)
+
     /*Add Post to Database*/
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addPost(post: PostEntity)

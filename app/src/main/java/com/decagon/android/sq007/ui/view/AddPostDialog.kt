@@ -7,14 +7,17 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.decagon.android.sq007.databinding.FragmentAddPostDialogBinding
 import com.decagon.android.sq007.model.Post
 import com.decagon.android.sq007.repository.Repository
 import com.decagon.android.sq007.room.CachedCommentMapper
 import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
+import com.decagon.android.sq007.ui.Intents.MainIntent
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
+import kotlinx.coroutines.launch
 
 class AddPostDialog : DialogFragment() {
     private var _binding: FragmentAddPostDialogBinding? = null
@@ -57,17 +60,26 @@ class AddPostDialog : DialogFragment() {
             val userId = (1..10).random()
             val id = 0
 
-            if (postTitle.isEmpty() || postBody.isEmpty()) {
-                binding.newPostTitle.error = "Title Can't Be Empty"
-                binding.newPostBody.error = "Post Can't Be Empty"
-                Toast.makeText(requireContext(), "All Fields Must Be Filled", Toast.LENGTH_SHORT)
-                    .show()
-                return@setOnClickListener
-            } else {
-                val newPost = Post(userId, id, postTitle, postBody)
-                viewModel.addPost(newPost)
-                viewModel.getPosts()
-                dismiss()
+            when {
+                postTitle.isEmpty() -> {
+                    binding.newPostTitle.error = "Title Can't Be Empty"
+                    Toast.makeText(requireContext(), "All Fields Must Be Filled", Toast.LENGTH_SHORT)
+                        .show()
+                    return@setOnClickListener
+                }
+                postBody.isEmpty() -> {
+                    binding.newPostBody.error = "Post Can't Be Empty"
+                    Toast.makeText(requireContext(), "All Fields Must Be Filled", Toast.LENGTH_SHORT)
+                        .show()
+                    return@setOnClickListener
+                }
+                else -> {
+                    val newPost = Post(userId, id, postTitle, postBody)
+                    lifecycleScope.launch {
+                        viewModel.userIntent.send(MainIntent.AddPost(newPost))
+                    }
+                    dismiss()
+                }
             }
         }
     }

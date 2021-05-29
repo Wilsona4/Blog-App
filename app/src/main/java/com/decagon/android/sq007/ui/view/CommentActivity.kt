@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.decagon.android.sq007.databinding.ActivityCommentBinding
 import com.decagon.android.sq007.model.Post
@@ -14,13 +15,16 @@ import com.decagon.android.sq007.repository.Repository
 import com.decagon.android.sq007.room.CachedCommentMapper
 import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
+import com.decagon.android.sq007.ui.Intents.MainIntent
+import com.decagon.android.sq007.ui.State.MainState
 import com.decagon.android.sq007.ui.adapter.CommentRvAdapter
 import com.decagon.android.sq007.ui.view.MainActivity.Companion.POST
 import com.decagon.android.sq007.util.ConnectivityLiveData
 import com.decagon.android.sq007.util.LocalListUtil
-import com.decagon.android.sq007.ui.State.Resource
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 class CommentActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCommentBinding
@@ -72,7 +76,9 @@ class CommentActivity : AppCompatActivity() {
             when (isAvailable) {
                 true -> {
                     if (postId != null) {
-                        viewModel.getComments(postId)
+                        lifecycleScope.launch {
+                            viewModel.userIntent.send(MainIntent.GetComments(postId))
+                        }
                     }
                     binding.rvComments.visibility = View.VISIBLE
                     binding.commentStatusButton.visibility = View.INVISIBLE
@@ -95,7 +101,12 @@ class CommentActivity : AppCompatActivity() {
 
         /*Set-up Rv Swipe to Refresh*/
         binding.swipeRefreshComment.setOnRefreshListener {
-            postId?.let { viewModel.getComments(it) }
+
+            postId?.let {
+                lifecycleScope.launch {
+                    viewModel.userIntent.send(MainIntent.GetComments(it))
+                }
+            }
             loadPage()
             binding.swipeRefreshComment.isRefreshing = false
         }
@@ -112,26 +123,32 @@ class CommentActivity : AppCompatActivity() {
     }
 
     private fun loadPage() {
-        viewModel.getComments(postIds)
-        viewModel.commentList.observe(this, Observer { response ->
-            when (response) {
-                is Resource.Success -> {
-                    response.data?.let {
-                        commentRvAdapter.submitList(it)
-                        localCommentList = it.toMutableList()
+        lifecycleScope.launch {
+            viewModel.userIntent.send(MainIntent.GetComments(postIds))
+
+            viewModel.state.collect { response ->
+                when (response) {
+                    is MainState.Idle -> {
+
                     }
-                    hideProgressBar()
-                }
-                is Resource.Loading -> {
-                    showProgressBar()
-                }
-                is Resource.Error -> {
-                    hideProgressBar()
-                    Toast.makeText(this, "Error: Occurred", Toast.LENGTH_SHORT).show()
+                    is MainState.Comments -> {
+                        response.let {
+                            commentRvAdapter.submitList(it.comment)
+                            localCommentList = it.comment.toMutableList()
+                        }
+                        hideProgressBar()
+                    }
+                    is MainState.Loading -> {
+                        showProgressBar()
+                    }
+                    is MainState.Error -> {
+                        hideProgressBar()
+                        Toast.makeText(this@CommentActivity, "Error Occurred", Toast.LENGTH_SHORT)
+                            .show()
+                    }
                 }
             }
-
-        })
+        }
     }
 
     private fun hideProgressBar() {

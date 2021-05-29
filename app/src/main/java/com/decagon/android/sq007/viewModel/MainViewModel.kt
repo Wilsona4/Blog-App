@@ -22,15 +22,6 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
         get() = _state
 
 
-    private var _postList = MutableLiveData<Resource<List<Post>>>()
-    val postList: LiveData<Resource<List<Post>>> get() = _postList
-
-    private var _commentList = MutableLiveData<Resource<List<Comment>>>()
-    val commentList: LiveData<Resource<List<Comment>>> get() = _commentList
-
-    private var _entireCommentList = MutableLiveData<Resource<List<Comment>>>()
-    val entireCommentList: LiveData<Resource<List<Comment>>> get() = _entireCommentList
-
     init { handleIntent() }
 
     private fun handleIntent() {
@@ -39,6 +30,10 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
                 when(it) {
                     is MainIntent.GetPosts -> {getPosts()}
                     is MainIntent.GetAllComments -> {getAllComments()}
+                    is MainIntent.GetComments -> {getComments(it.postId)}
+                    is MainIntent.AddPost -> {addPost(it.post)}
+                    is MainIntent.AddComment -> {addComment(it.comment)}
+                    is MainIntent.Search -> {}
                 }
             }
         }
@@ -58,10 +53,10 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
     /*Function to get All Comments*/
     fun getAllComments() {
         viewModelScope.launch {
-            _entireCommentList.value = Resource.Loading
+            _state.value = MainState.Loading
             val response = repository.getAllComments()
             response.collect {
-                _entireCommentList.value = it
+                _state.value = it
             }
         }
     }
@@ -69,21 +64,21 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
     /*Function to get Comments*/
     fun getComments(postId: Int) {
         viewModelScope.launch {
-            _commentList.value = Resource.Loading
+            _state.value = MainState.Loading
             val response = repository.getComments(postId)
             response.collect {
-                _commentList.value = it
+                _state.value = it
             }
         }
     }
 
     /*Function to add Comments*/
-    fun pushComment(comment: Comment) {
+    fun addComment(comment: Comment) {
         viewModelScope.launch {
-            _commentList.value = Resource.Loading
+            _state.value = MainState.Loading
             val response = repository.pushComment(comment)
             response.collect {
-                _commentList.value = it
+                _state.value = it
             }
         }
     }
@@ -91,31 +86,35 @@ class MainViewModel(private val repository: IRepository) : ViewModel() {
     /*Function to add Posts*/
     fun addPost(post: Post) {
         viewModelScope.launch {
-            repository.addPost(post)
+            _state.value = MainState.Loading
+            val response = repository.addPost(post)
+            response.collect {
+                _state.value = it
+            }
         }
     }
 
 //    /*Search Posts*/
-//    private var cachedPostList = MutableLiveData<Resource<List<Post>>>()
+//    private var cachedPostList = MutableStateFlow<MainState>(MainState.Idle)
 //    private var isSearchStarting = true
 //    var isSearching = MutableStateFlow(false)
 //
 //    fun searchPostList(query: String) {
 //
 //        if (isSearchStarting) {
-//            cachedPostList.value = _postList.value
+//            cachedPostList.value = _state.value
 //            isSearchStarting = false
 //        }
 //
 //        val listToSearch = if (isSearchStarting) {
-//            postList.value
+//            _state.value
 //        } else {
 //            cachedPostList.value
 //        }
 //
 //        viewModelScope.launch {
 //            if (query.isEmpty()) {
-//                _postList.value = cachedPostList.value
+//                _state.value = cachedPostList.value
 //                isSearching.value = false
 //                isSearchStarting = true
 //                return@launch

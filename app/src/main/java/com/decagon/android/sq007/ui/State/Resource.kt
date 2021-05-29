@@ -16,7 +16,4 @@ sealed class Resource<out T>() {
     data class Error(val exception: Exception): Resource<Nothing>()
 
     object Loading: Resource<Nothing>()
-    object Idle: Resource<Nothing>()
-
-
 }

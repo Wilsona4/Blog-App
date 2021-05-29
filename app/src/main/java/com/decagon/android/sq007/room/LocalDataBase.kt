@@ -15,7 +15,7 @@ abstract class LocalDataBase : RoomDatabase() {
         @Volatile
         private var INSTANCE: LocalDataBase? = null
 
-        //         operator fun invoke(context: Context) {
+        // Operator fun invoke(context: Context) {
         fun getInstance(context: Context): LocalDataBase =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: createDatabase(context).also { INSTANCE = it }

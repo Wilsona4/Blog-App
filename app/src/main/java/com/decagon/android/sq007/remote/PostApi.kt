@@ -25,5 +25,5 @@ interface PostApi {
     @POST("comments")
     suspend fun pushComment(
         @Body comment: Comment
-    )
+    ) : Comment
 }
