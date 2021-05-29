@@ -12,6 +12,7 @@ import androidx.appcompat.widget.SearchView.*
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.decagon.android.sq007.R
 import com.decagon.android.sq007.databinding.ActivityMainBinding
 import com.decagon.android.sq007.model.Post
@@ -95,6 +96,14 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
             postRvAdapter = PostRvAdapter(this@MainActivity)
             adapter = postRvAdapter
         }
+
+        /*Scroll to Position of New Post*/
+        postRvAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver(){
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                binding.rvPost.scrollToPosition(positionStart)
+            }
+        })
     }
 
     private fun loadPage() {

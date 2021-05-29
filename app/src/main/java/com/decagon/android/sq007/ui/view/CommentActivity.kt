@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.decagon.android.sq007.R
 import com.decagon.android.sq007.databinding.ActivityCommentBinding
 import com.decagon.android.sq007.model.Post
@@ -94,6 +95,14 @@ class CommentActivity : AppCompatActivity() {
             commentRvAdapter = CommentRvAdapter()
             adapter = commentRvAdapter
         }
+
+        /*Scroll to Position of New Comment*/
+        commentRvAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver(){
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                binding.rvComments.scrollToPosition(positionStart)
+            }
+        })
     }
 
     private fun loadPage() {

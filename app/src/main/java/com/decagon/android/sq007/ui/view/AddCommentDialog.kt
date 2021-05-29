@@ -62,18 +62,24 @@ class AddCommentDialog(private val post: Post) : DialogFragment() {
             val postId = post.id
 
 
-            if (name.isEmpty() || email.isEmpty() || comments.isEmpty()){
-                binding.commenterName.error = "Name Can't Be Empty"
-                binding.emailAddress.error = "Email Can't Be Empty"
-                binding.newComment.error = "Comment Can't Be Empty"
-                Toast.makeText(requireContext(), "All Fields Must Be Filled", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            } else {
-                val newComment = Comment(comments, email, id, name, postId)
-                viewModel.pushComment(newComment)
-                Log.d("NEWCOM", "onActivityCreated: $newComment")
-                viewModel.getComments(postId)
-                dismiss()
+            when {
+                name.isEmpty() -> {
+                    binding.commenterName.error = "Name Can't Be Empty"
+                    return@setOnClickListener
+                }
+                email.isEmpty() -> {
+                    binding.emailAddress.error = "Email Can't Be Empty"
+                    return@setOnClickListener
+                }
+                comments.isEmpty() -> {
+                    binding.newComment.error = "Comment Can't Be Empty"
+                    return@setOnClickListener
+                }
+                else -> {
+                    val newComment = Comment(comments, email, id, name, postId)
+                    viewModel.pushComment(newComment)
+                    dismiss()
+                }
             }
         }
     }

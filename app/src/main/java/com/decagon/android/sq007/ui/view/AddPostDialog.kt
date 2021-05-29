@@ -57,17 +57,20 @@ class AddPostDialog : DialogFragment() {
             val userId = (1..10).random()
             val id = 0
 
-            if (postTitle.isEmpty() || postBody.isEmpty()) {
-                binding.newPostTitle.error = "Title Can't Be Empty"
-                binding.newPostBody.error = "Post Can't Be Empty"
-                Toast.makeText(requireContext(), "All Fields Must Be Filled", Toast.LENGTH_SHORT)
-                    .show()
-                return@setOnClickListener
-            } else {
-                val newPost = Post(userId, id, postTitle, postBody)
-                viewModel.addPost(newPost)
-                viewModel.getPosts()
-                dismiss()
+            when {
+                postTitle.isEmpty() -> {
+                    binding.newPostTitle.error = "Title Can't Be Empty"
+                    return@setOnClickListener
+                }
+                postBody.isEmpty() -> {
+                    binding.newPostBody.error = "Post Can't Be Empty"
+                    return@setOnClickListener
+                }
+                else -> {
+                    val newPost = Post(userId, id, postTitle, postBody)
+                    viewModel.addPost(newPost)
+                    dismiss()
+                }
             }
         }
     }

@@ -9,6 +9,7 @@ import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
 import com.decagon.android.sq007.util.Resource
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 
 class Repository(
@@ -29,7 +30,9 @@ class Repository(
             }
             /*Retrieve Posts Local DataBAse*/
             val cachedPosts = db.userDao().readAllPost()
-            emit(Resource.Success(cachedPostMapper.mapFromEntityList(cachedPosts)))
+            cachedPosts.collect {
+                emit(Resource.Success(cachedPostMapper.mapFromEntityList(it)))
+            }
         } catch (e: Exception) {
             emit(Resource.Error(e))
         }
@@ -41,7 +44,9 @@ class Repository(
         try {
             /*Retrieve Posts Local DataBAse*/
             val cachedComments = db.userDao().readComments(postId)
-            emit(Resource.Success(cachedCommentMapper.mapFromEntityList(cachedComments)))
+            cachedComments.collect {
+                emit(Resource.Success(cachedCommentMapper.mapFromEntityList(it)))
+            }
         } catch (e: Exception) {
 //            error exception
             emit(Resource.Error(e))
@@ -60,7 +65,9 @@ class Repository(
             }
             /*Retrieve Posts Local DataBAse*/
             val cachedComments = db.userDao().readAllComments()
-            emit(Resource.Success(cachedCommentMapper.mapFromEntityList(cachedComments)))
+            cachedComments.collect {
+                emit(Resource.Success(cachedCommentMapper.mapFromEntityList(it)))
+            }
         } catch (e: Exception) {
             emit(Resource.Error(e))
         }
