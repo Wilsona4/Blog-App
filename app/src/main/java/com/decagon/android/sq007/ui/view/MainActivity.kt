@@ -11,6 +11,7 @@ import androidx.appcompat.widget.SearchView.*
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.decagon.android.sq007.R
 import com.decagon.android.sq007.databinding.ActivityMainBinding
 import com.decagon.android.sq007.model.Post
@@ -24,6 +25,7 @@ import com.decagon.android.sq007.ui.adapter.PostRvAdapter
 import com.decagon.android.sq007.util.LocalListUtil.getPostList
 import com.decagon.android.sq007.viewModel.MainViewModel
 import com.decagon.android.sq007.viewModel.MainViewModelFactory
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.*
@@ -40,6 +42,8 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
 
     private var localPostList = getPostList()
 
+    private var isSearching = MutableStateFlow(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -49,7 +53,6 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
         window?.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window?.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
         window?.statusBarColor = resources?.getColor(R.color.backgroundSecond)!!
-
 
         /*Initialise ViewModel*/
         val roomDatabase = LocalDataBase.getInstance(this)
@@ -69,10 +72,12 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
         binding.searchView.setOnQueryTextListener(object : OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query.isNullOrEmpty()) {
+                    isSearching.value = false
                     lifecycleScope.launch {
                         viewModel.userIntent.send(MainIntent.GetCachedPosts)
                     }
                 } else {
+                    isSearching.value = true
                     lifecycleScope.launch {
                         viewModel.userIntent.send(MainIntent.Search(query))
                     }
@@ -83,10 +88,12 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
             override fun onQueryTextChange(newText: String?): Boolean {
 
                 if (newText.isNullOrEmpty()) {
+                    isSearching.value = false
                     lifecycleScope.launch {
                         viewModel.userIntent.send(MainIntent.GetCachedPosts)
                     }
                 } else {
+                    isSearching.value = true
                     lifecycleScope.launch {
                         viewModel.userIntent.send(MainIntent.Search(newText))
                     }
@@ -102,10 +109,15 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
 
         /*Set-up Rv Swipe to Refresh*/
         binding.swipeRefresh.setOnRefreshListener {
-            lifecycleScope.launch {
-                viewModel.userIntent.send(MainIntent.RefreshPostIntent)
+            if (!isSearching.value) {
+                lifecycleScope.launch {
+                    viewModel.userIntent.send(MainIntent.RefreshPostIntent)
+                }
+                binding.swipeRefresh.isRefreshing = false
+            } else {
+                binding.swipeRefresh.isRefreshing = false
+                return@setOnRefreshListener
             }
-            binding.swipeRefresh.isRefreshing = false
         }
 
     }
@@ -117,14 +129,24 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
             postRvAdapter = PostRvAdapter(this@MainActivity)
             adapter = postRvAdapter
         }
+
+        /*Scroll to Position of New Post*/
+        postRvAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                binding.rvPost.scrollToPosition(positionStart)
+            }
+        })
     }
 
+    /*Get Comments*/
     private fun launchView() {
         lifecycleScope.launch {
             viewModel.userIntent.send(MainIntent.GetCachedPosts)
         }
     }
 
+    /*Update UI Based on App State*/
     private fun loadPage() {
         lifecycleScope.launch {
             viewModel.state.collect { response ->

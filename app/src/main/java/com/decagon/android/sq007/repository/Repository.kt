@@ -123,9 +123,8 @@ class Repository(
     override suspend fun search(query: String): Flow<MainState> = flow {
         emit(MainState.Loading)
         try {
-
             /*Retrieve Posts Local DataBase*/
-            val cachedPosts = db.userDao().searchDatabase(query)
+            val cachedPosts = db.userDao().searchDatabase("%$query%")
 
             cachedPosts.collect {
                 emit(MainState.Search(cachedPostMapper.mapFromEntityList(it)))

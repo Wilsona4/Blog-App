@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.decagon.android.sq007.R
 import com.decagon.android.sq007.databinding.ActivityCommentBinding
 import com.decagon.android.sq007.model.Post
@@ -38,7 +39,7 @@ class CommentActivity : AppCompatActivity() {
 
     private var localCommentList = LocalListUtil.getCommentList()
 
-    var postIds = 1
+    private var postIds = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,6 +104,13 @@ class CommentActivity : AppCompatActivity() {
             commentRvAdapter = CommentRvAdapter()
             adapter = commentRvAdapter
         }
+        /*Scroll to Position of New Comment*/
+        commentRvAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver(){
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                binding.rvComments.scrollToPosition(positionStart)
+            }
+        })
     }
 
     private fun loadPage() {
