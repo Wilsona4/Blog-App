@@ -1,6 +1,5 @@
 package com.decagon.android.sq007.ui.view
 
-import android.app.ProgressDialog.show
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -21,7 +20,6 @@ import com.decagon.android.sq007.room.CachedCommentMapper
 import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
 import com.decagon.android.sq007.ui.adapter.PostRvAdapter
-import com.decagon.android.sq007.util.ConnectivityLiveData
 import com.decagon.android.sq007.util.LocalListUtil.getPostList
 import com.decagon.android.sq007.util.Resource
 import com.decagon.android.sq007.viewModel.MainViewModel
@@ -37,7 +35,6 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
     private lateinit var viewModel: MainViewModel
     private lateinit var viewModelFactory: MainViewModelFactory
     private lateinit var postRvAdapter: PostRvAdapter
-    private lateinit var connectivityLiveData: ConnectivityLiveData
 
     private var localPostList = getPostList()
 
@@ -45,8 +42,6 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        connectivityLiveData = ConnectivityLiveData(application)
 
         /*Set Status bar Color*/
         window?.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
@@ -64,8 +59,7 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
 
         /*Initialise RecyclerView*/
         setupRecyclerView()
-
-        displayItems()
+        loadPage()
 
         /*Set-up Search functionality*/
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
@@ -88,29 +82,10 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
 
         /*Set-up Rv Swipe to Refresh*/
         binding.swipeRefresh.setOnRefreshListener {
-            displayItems()
+            loadPage()
             binding.swipeRefresh.isRefreshing = false
         }
 
-    }
-
-    private fun displayItems() {
-        /*Set-Up Internet Connection Awareness*/
-        connectivityLiveData.observe(this, Observer { isAvailable ->
-            when (isAvailable) {
-                true -> {
-//                    viewModel.getPosts()
-                    binding.rvPost.visibility = View.VISIBLE
-                    binding.statusButton.visibility = View.INVISIBLE
-                    loadPage()
-                }
-                false -> {
-                    binding.rvPost.visibility = View.INVISIBLE
-                    binding.statusButton.visibility = View.VISIBLE
-                    hideProgressBar()
-                }
-            }
-        })
     }
 
     /*Initialise RecyclerView*/

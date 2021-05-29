@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">mvvmImpl</string>
+    <string name="app_name">Blogger</string>
     <string name="title">Title</string>
     <string name="body">Body</string>
     <string name="no_internet">No Internet</string>

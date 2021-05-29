@@ -18,7 +18,6 @@ import com.decagon.android.sq007.room.CachedPostMapper
 import com.decagon.android.sq007.room.LocalDataBase
 import com.decagon.android.sq007.ui.adapter.CommentRvAdapter
 import com.decagon.android.sq007.ui.view.MainActivity.Companion.POST
-import com.decagon.android.sq007.util.ConnectivityLiveData
 import com.decagon.android.sq007.util.LocalListUtil
 import com.decagon.android.sq007.util.Resource
 import com.decagon.android.sq007.viewModel.MainViewModel
@@ -33,7 +32,6 @@ class CommentActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var viewModelFactory: MainViewModelFactory
     private lateinit var commentRvAdapter: CommentRvAdapter
-    private lateinit var connectivityLiveData: ConnectivityLiveData
 
     private var localCommentList = LocalListUtil.getCommentList()
 
@@ -43,8 +41,6 @@ class CommentActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCommentBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        connectivityLiveData = ConnectivityLiveData(application)
 
         /*Set Status bar Color*/
         window?.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
@@ -73,25 +69,7 @@ class CommentActivity : AppCompatActivity() {
         }
 
         setupRecyclerView()
-
-        /*Set-Up Internet Connection Awareness*/
-        connectivityLiveData.observe(this, Observer { isAvailable ->
-            when (isAvailable) {
-                true -> {
-                    if (postId != null) {
-                        viewModel.getComments(postId)
-                    }
-                    binding.rvComments.visibility = View.VISIBLE
-                    binding.commentStatusButton.visibility = View.INVISIBLE
-                    loadPage()
-                }
-                false -> {
-                    binding.rvComments.visibility = View.INVISIBLE
-                    binding.commentStatusButton.visibility = View.VISIBLE
-                    hideProgressBar()
-                }
-            }
-        })
+        loadPage()
 
         /*Add New Comment*/
         binding.floatingActionButton.setOnClickListener {
@@ -108,7 +86,6 @@ class CommentActivity : AppCompatActivity() {
             binding.swipeRefreshComment.isRefreshing = false
         }
     }
-
 
     /*Initialise RecyclerView*/
     private fun setupRecyclerView() {
@@ -149,5 +126,4 @@ class CommentActivity : AppCompatActivity() {
     private fun showProgressBar() {
         progressBar.visibility = View.VISIBLE
     }
-
 }
