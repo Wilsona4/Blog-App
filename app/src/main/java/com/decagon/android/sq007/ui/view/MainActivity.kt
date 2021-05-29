@@ -3,6 +3,7 @@ package com.decagon.android.sq007.ui.view
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -11,6 +12,7 @@ import androidx.appcompat.widget.SearchView.*
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.decagon.android.sq007.R
 import com.decagon.android.sq007.databinding.ActivityMainBinding
 import com.decagon.android.sq007.model.Post
 import com.decagon.android.sq007.repository.Repository
@@ -43,6 +45,12 @@ class MainActivity : AppCompatActivity(), PostRvAdapter.Interaction {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        /*Set Status bar Color*/
+        window?.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        window?.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        window?.statusBarColor = resources?.getColor(R.color.backgroundSecond)!!
+
 
         /*Initialise ViewModel*/
         val roomDatabase = LocalDataBase.getInstance(this)

@@ -2,12 +2,14 @@ package com.decagon.android.sq007.ui.view
 
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.decagon.android.sq007.R
 import com.decagon.android.sq007.databinding.ActivityCommentBinding
 import com.decagon.android.sq007.model.Post
 import com.decagon.android.sq007.repository.Repository
@@ -42,6 +44,12 @@ class CommentActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCommentBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        /*Set Status bar Color*/
+        window?.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        window?.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        window?.statusBarColor = resources?.getColor(R.color.backgroundSecond)!!
+
 
         val retrievedPost: Post? = intent?.extras?.getParcelable(POST)
         val postId = retrievedPost?.id
